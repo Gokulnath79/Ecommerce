@@ -1,40 +1,28 @@
-// Backend: server.js
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const { handleError } = require('./middleware/errorHandler');
+const app = express();
 const db = require('./config/db');
 
-const app = express();
+app.use(express.json());
 
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Verify DB connection
+(async () => {
+  try {
+    const connection = await db.getConnection();
+    console.log('Connected to the MySQL database successfully.');
+    connection.release();
+  } catch (err) {
+    console.error('Database connection failed:', err);
+  }
+})();
 
-// Routes
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-
-// Error handling
-app.use((err, req, res, next) => {
-  handleError(err, res);
+// Sample route for testing
+app.get('/test', (req, res) => {
+  res.send('API is working!');
 });
 
-// Connect to database
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed:', err);
-    process.exit(1);
-  } else {
-    console.log('Connected to database');
-    app.listen(process.env.PORT || 5000, () => {
-      console.log('Server is running on port 5000');
-    });
-  }
+// Server setup
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

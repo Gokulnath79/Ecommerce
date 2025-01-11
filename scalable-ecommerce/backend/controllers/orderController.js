@@ -1,35 +1,35 @@
-const Order = require('../models/Order');
-const Cart = require('../models/Cart');
+const db = require('../config/db');
 
 const orderController = {
   async createOrder(req, res) {
     try {
       const { name, address } = req.body;
-
-      // Fetch cart items
-      const cartItems = await Cart.getAll();
+      const [cartItems] = await db.query(
+        `SELECT c.product_id, c.quantity, p.price 
+         FROM cart c
+         JOIN products p ON c.product_id = p.id`
+      );
 
       if (cartItems.length === 0) {
         return res.status(400).json({ message: 'Cart is empty' });
       }
 
-      // Calculate total amount
-      const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-      const orderDetails = {
-        products: cartItems.map((item) => ({
-          productId: item.product_id,
-          quantity: item.quantity,
-        })),
-        totalAmount,
-        address,
+      const [orderResult] = await db.query('INSERT INTO orders (user_name, address) VALUES (?, ?)', [
         name,
-      };
+        address,
+      ]);
 
-      // Create order and clear cart
-      const orderId = await Order.createOrder(orderDetails);
-      await Cart.clearCart();
+      const orderId = orderResult.insertId;
 
+      for (const item of cartItems) {
+        await db.query('INSERT INTO order_items (order_id, product_id, quantity) VALUES (?, ?, ?)', [
+          orderId,
+          item.product_id,
+          item.quantity,
+        ]);
+      }
+
+      await db.query('DELETE FROM cart');
       res.status(201).json({ message: 'Order placed successfully', orderId });
     } catch (error) {
       res.status(500).json({ message: 'Error creating order' });

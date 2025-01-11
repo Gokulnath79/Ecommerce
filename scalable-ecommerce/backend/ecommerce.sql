@@ -1,5 +1,6 @@
 -- Create the database
 CREATE DATABASE IF NOT EXISTS ecommerce;
+
 USE ecommerce;
 
 -- Drop tables if they exist
@@ -17,16 +18,17 @@ CREATE TABLE products (
 
 -- Insert initial products into the products table
 INSERT INTO products (name, price)
-VALUES ('Product 1', 10.99),
-       ('Product 2', 15.99),
-       ('Product 3', 20.49);
+VALUES 
+    ('Product 1', 10.99),
+    ('Product 2', 15.99),
+    ('Product 3', 20.49);
 
 -- Create the cart table
 CREATE TABLE cart (
     id INT AUTO_INCREMENT PRIMARY KEY,
     product_id INT NOT NULL,
     quantity INT DEFAULT 1,
-    FOREIGN KEY (product_id) REFERENCES products(id)
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 -- Create the orders table
@@ -43,17 +45,6 @@ CREATE TABLE order_items (
     order_id INT NOT NULL,
     product_id INT NOT NULL,
     quantity INT DEFAULT 1,
-    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
-
--- Example insertion into cart (for testing)
-INSERT INTO cart (product_id, quantity)
-VALUES (1, 2), (2, 1);
-
--- Example order and order items insertion (for testing)
-INSERT INTO orders (user_name, address)
-VALUES ('John Doe', '123 Main Street, Springfield');
-
-INSERT INTO order_items (order_id, product_id, quantity)
-VALUES (1, 1, 2), (1, 2, 1);
